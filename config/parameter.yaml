@@ -1,0 +1,8 @@
+dataset_dir: /home/bjtshang/Downloads/rgbd_dataset_freiburg1_desk
+
+camera.fx: 500
+
+nFeatures: 100
+scaleFactor: 1.2
+nLevels: 8
+matchedRatio: 0.5
