@@ -16,24 +16,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "myslam/common_include.h"
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#include "myslam/Common_include.h"
+
 namespace myslam{
 class Config
 {
 private:
-  static std::shared_ptr<Config> mConfig;
+  static shared_ptr<Config> pConfig;
   cv::FileStorage mFile;
   Config(){}
 public:
   ~Config();
   
-  static void setParameterFile(const std::string& filename);
+  static void setParameterFile(const string& filename);
   
-  template<typename T>
-  static T get(const std::string& key)
+  template<typename T> // the parameter can be int, double or string
+  static T get(const string& key)
   {
-    return T(Config::mConfig->mFile[key]);
+    return T(Config::pConfig->mFile[key]);
   }
 };
 
 }
+
+#endif // CONFIG_H

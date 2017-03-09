@@ -19,7 +19,7 @@
 
 #ifndef Frame_H
 #define Frame_H
-#include "myslam/common_include.h"
+#include "myslam/Common_include.h"
 #include "Camera.h"
 namespace myslam{
 class Frame{

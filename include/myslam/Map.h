@@ -20,7 +20,7 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "myslam/common_include.h"
+#include "myslam/Common_include.h"
 #include "myslam/Camera.h"
 #include "myslam/Frame.h"
 #include "myslam/MapPoint.h"

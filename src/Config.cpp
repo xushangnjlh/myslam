@@ -17,3 +17,29 @@
  *
  */
 
+#include "myslam/Config.h"
+namespace myslam{
+  
+shared_ptr<Config> Config::pConfig = nullptr;
+
+void Config::setParameterFile(const string& filename)
+{
+  if(pConfig==nullptr)
+    pConfig = shared_ptr<Config>(new Config);
+  pConfig->mFile = cv::FileStorage(filename.c_str(), cv::FileStorage::READ);
+  if(!pConfig->mFile.isOpened())
+  {
+    cerr<<"Parameter file "<< filename << " does not exist!" << endl;
+    pConfig->mFile.release();
+    return ;
+  }
+}
+
+Config::~Config()
+{
+  if(mFile.isOpened())
+    mFile.release();
+}
+
+}
+
