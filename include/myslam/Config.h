@@ -28,6 +28,12 @@ public:
   ~Config();
   
   static void setParameterFile(const std::string& filename);
+  
+  template<typename T>
+  static T get(const std::string& key)
+  {
+    return T(Config::mConfig->mFile[key]);
+  }
 };
 
 }
