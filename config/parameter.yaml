@@ -1,4 +1,4 @@
-dataset_dir: /home/bjtshang/Downloads/rgbd_dataset_freiburg1_desk
+dataset_dir: /home/shang/dataset/rgbd_dataset_freiburg1_desk
 
 camera.fx: 500
 

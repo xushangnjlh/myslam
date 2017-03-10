@@ -18,6 +18,7 @@
  */
 
 #include "myslam/Config.h"
+
 namespace myslam{
   
 shared_ptr<Config> Config::pConfig = nullptr;
