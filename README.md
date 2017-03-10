@@ -1,2 +1,2 @@
 # myslam
-myslam learned form ORB-SLAM, edit by KDevelop IDE
+myslam learned form ORB-SLAM, edited by KDevelop IDE
