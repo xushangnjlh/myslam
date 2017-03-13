@@ -22,9 +22,9 @@
 
 #include "myslam/Common_include.h"
 #include "myslam/Map.h"
-#include "myslam/Frame.h"
-#include "myslam/MapPoint.h"
 #include "myslam/Config.h"
+
+#include <opencv2/features2d/features2d.hpp>
 
 namespace myslam
 {
@@ -44,13 +44,17 @@ public:
   Frame::Ptr mReferenceFrame;
   
   cv::Ptr<cv::ORB> mpORB;
-  vector<cv::Point3f> mvMapPointsInRef;
-  vector<cv::KeyPoint> mvKeyPointsInCur;
+  vector<cv::Point3f> mvMapPointsRef;
+  vector<cv::KeyPoint> mvKeyPointsCur;
   Mat mDescriptorRef;
   Mat mDescriptorCur;
-  vector<cv::DMatch> mvMatched;
   
-  SE3 mEstimatedTcr;
+  cv::FlannBasedMatcher mMatcher;
+  vector<cv::DMatch> mvMatched;
+  vector<int> mvMatchedKPIndex;
+  vector<MapPoint::Ptr> mvpMatchedMP;
+  
+  SE3 mEstimatedTcw;
   int mnInliers;
   int mnLost;
   
@@ -58,12 +62,13 @@ public:
   int mnFeatures;
   double mScaleFactor;
   int mnLevel;
-  float mMatchedRatio;
-  int mnMaxLost;
-  int mnMinInlier;
+  float mMatchRatio; // criteria for good match
+  int mnMaxLost; // max frames for tracking lost
+  int mnMinInlier; // min inliers for matching
   
   double mKeyFrameMinR;
-  doublr mKeyFrameMint;
+  double mKeyFrameMint;
+  double mMapPointTh; // ratio to remove MapPoint
   
 public:
   VisualOdometry();
@@ -76,11 +81,15 @@ protected:
   void ComputeDescripter();
   void FeatureMatch();
   void PoseEstimateByPnP();
-  void SetMapPointPosInRef();
+  double GetNormal(Frame::Ptr frame, MapPoint::Ptr mapPoint);
   
+  void AddMapPoints();
   void AddKeyFrame();
-  void CheckPose();
-  void CheckKeyFrame();
+  bool CheckPose();
+  bool CheckKeyFrame();
+  
+  void PoseOptimization();
+  
 };
 }
 

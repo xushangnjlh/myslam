@@ -1,6 +1,6 @@
 #ifndef CAMERA_H
 #define CAMERA_H
-#include "myslam/common_include.h"
+#include "myslam/Common_include.h"
 namespace myslam{
 class Camera{
 public:

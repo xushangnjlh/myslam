@@ -21,7 +21,6 @@
 #define MAP_H
 
 #include "myslam/Common_include.h"
-#include "myslam/Camera.h"
 #include "myslam/Frame.h"
 #include "myslam/MapPoint.h"
 
@@ -34,7 +33,7 @@ public:
   std::unordered_map<unsigned long, MapPoint::Ptr> mmMapPoints;
   std::unordered_map<unsigned long, Frame::Ptr> mmKeyFrames;
   
-  Map(){}
+  Map();
   
   void InsertMapPoint(MapPoint::Ptr mapPoint);
   void InsertKeyFrame(Frame::Ptr keyFrame);

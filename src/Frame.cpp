@@ -20,14 +20,19 @@
 #include "myslam/Frame.h"
 namespace myslam
 {
-Frame::Frame()
-:mnId(-1), mTimeStamp(-1), mpCamera(nullptr), mbIsKeyFrame(false)
+Frame::Frame():
+  mnId(-1), mTimeStamp(-1), mpCamera(nullptr), mbIsKeyFrame(false)
 {
   
 }
 
-Frame::Frame(long id, double timeStamp=0, SE3 Tcw=SE3(), Camera::Ptr camera=nullptr, Mat color=Mat(), Mat depth=Mat())
-:mnId(id), mTimeStamp(timeStamp), mTcw(Tcw), mpCamera(camera), mColor(color), mDepth(depth), mbIsKeyFrame(false)
+Frame::Frame(long id, 
+	     double timeStamp=0, 
+	     SE3 Tcw=SE3(), 
+	     Camera::Ptr camera=nullptr, 
+	     Mat color=Mat(), 
+	     Mat depth=Mat()):
+  mnId(id), mTimeStamp(timeStamp), mTcw(Tcw), mpCamera(camera), mColor(color), mDepth(depth), mbIsKeyFrame(false)
 {
   
 }

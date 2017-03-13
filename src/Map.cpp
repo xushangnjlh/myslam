@@ -21,6 +21,11 @@
 namespace
 {
   
+Map()
+{
+  
+}
+  
 void myslam::Map::InsertMapPoint(myslam::MapPoint::Ptr mapPoint)
 {
   if(mmMapPoints.find(mapPoint->mnId) == mmMapPoints.end())

@@ -21,7 +21,6 @@
 #define MAPPOINT_H
 
 #include "myslam/Common_include.h"
-#include "myslam/Camera.h"
 #include "myslam/Frame.h"
 namespace myslam
 {
@@ -48,7 +47,7 @@ public:
 	  );
   ~MapPoint();
   
-  static MapPoint::Ptr CreateMapPoint();
+  // static MapPoint::Ptr CreateMapPoint();
   static MapPoint::Ptr CreateMapPoint(const Vector3d& worldPos, 
 					const Vector3d& normalVector, 
 					const Mat& descriptor,
