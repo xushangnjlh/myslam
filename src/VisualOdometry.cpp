@@ -30,15 +30,17 @@ namespace myslam
 {
 
 VisualOdometry::VisualOdometry():
-mState(INITIALIZING), mMap(new Map), mCurrentFrame(nullptr), mReferenceFrame(nullptr), 
-mnInliers(0), mnLost(0), mMatcher(new cv::flann::LshIndexParams(5, 10, 2))
+mState(INITIALIZING), mMap(new Map), mCurrentFrame(nullptr), mReferenceFrame(nullptr), mnPnPInliers(0),
+mnBAInliers(0), mnLost(0), mMatcher(new cv::flann::LshIndexParams(5, 10, 2))
 {
   mnFeatures = Config::get<int>("nFeatures");
   mScaleFactor = Config::get<double>("scaleFactor");
   mnLevel = Config::get<int>("nLevels");
   mMatchRatio = Config::get<double>("matchRatio");
   mnMaxLost = Config::get<int>("nMaxLost");
-  mnMinInlier = Config::get<int>("nMinInlier");
+  mnMinPnPInlier = Config::get<int>("nMinPnPInlier");
+  mnMinBAInlier = Config::get<int>("nMinBAInlier");
+  mMaxMotion = Config::get<double>("MaxMotion");
   mKeyFrameMinR = Config::get<double>("KeyFrameMinR");
   mKeyFrameMint = Config::get<double>("KeyFrameMint");
   mMapPointTh = Config::get<double>("MapPointTh");
@@ -72,16 +74,16 @@ bool VisualOdometry::AddFrame(Frame::Ptr frame)
       ComputeDescripter();
       FeatureMatch();
       PoseEstimateByPnP();
-      if(CheckPose())
+      if(CheckPose()) // enough inlier and no brutal motion
       {
-	mCurrentFrame->mTcw = mEstimatedTcw*mReferenceFrame->mTcw;
-	mReferenceFrame = mCurrentFrame;
-	PoseOptimization();
-	mnLost = 0;
+	mCurrentFrame->mTcw = mEstimatedTcw;
+	UpdateMapPoints();
+	mnLost = 0; // only the lost frames are consecutive, counts for mnLost
 	if(CheckKeyFrame())
 	{
 	  AddKeyFrame();
 	}
+	mReferenceFrame = mCurrentFrame;
       }
       else
       {
@@ -143,6 +145,19 @@ void VisualOdometry::AddKeyFrame()
   mReferenceFrame = mCurrentFrame;
 }
 
+bool VisualOdometry::CheckKeyFrame()
+{
+  SE3 Tcr = mEstimatedTcw*mReferenceFrame->mTcw.inverse();
+  Sophus::Vector6d se3 = Tcr.log();
+  Vector3d t = se3.head<3>();
+  Vector3d r = se3.tail<3>();
+  if(t.norm() > mKeyFrameMint || r.norm() > mKeyFrameMinR)
+    return true;
+  else
+    return false;
+}
+
+
 void VisualOdometry::FeatureMatch()
 {
   boost::timer timer;
@@ -155,6 +170,7 @@ void VisualOdometry::FeatureMatch()
     MapPoint::Ptr& p = p_index.second();
     if(mCurrentFrame->IsInFrame(p->mWorldPos))
     {
+      // all MapPoints in the Map, which can be visible in current Frame, set mnVisible++
       p->mnVisible++;
       vMapPointsInFrame.push_back(p);
       DescriptorQuery_MP.push_back(p->mDescriptor);
@@ -186,11 +202,13 @@ void VisualOdometry::FeatureMatch()
 
 void VisualOdometry::PoseEstimateByPnP()
 {
+  // convert MapPoints and KeyPoints towards cv::Point3f and cv::Point2f format
+  // in order to use solvePnPRansac (minimize reprojection error from objectPoints to imagePoints, to get inital pose)
   vector<cv::Point3f> vMapPoints;
   vector<cv::Point2f> vKeyPoints;
   for(MapPoint::Ptr mp : mvpMatchedMP)
   {
-    vMapPoints.pop_back(mp->GetPositionCV());
+    vMapPoints.push_back(mp->GetPositionCV());
   }
   for(int index : mvMatchedKPIndex)
   {
@@ -199,27 +217,25 @@ void VisualOdometry::PoseEstimateByPnP()
   
   Mat K = (cv::Mat_<double>(3,3) << 
 				mReferenceFrame->mpCamera->fx_, 0, mReferenceFrame->mpCamera->cx_,
-				0, mCurrentFrame->mpCamera->fy, mReferenceFrame->mpCamera->cy_,
+				0, mReferenceFrame->mpCamera->fy_, mReferenceFrame->mpCamera->cy_,
 				0,0,1
 	  );
   Mat rvec,tvec, inliers;
   cv::solvePnPRansac ( vMapPoints, vKeyPoints, K, Mat(), rvec, tvec, false, 100, 4.0, 0.99, inliers );
-  mnInliers = inliers.rows;
-  cout << "pnp inliers: " << mnInliers;
+  mnPnPInliers = inliers.rows;
+  cout << "pnp inliers = " << mnPnPInliers;
   mEstimatedTcw = SE3( SO3(rvec.at<double>(0,0), rvec.at<double>(0,1), rvec.at<double>(0,2)),
 		       Vector3d(tvec.at<double>(0,0)), tvec.at<double>(0,1), tvec.at<double>(0,2)
   );
-  cout << "EstimatedTcwByPnP: " << mEstimatedTcw.matrix() << endl;
+  cout << "EstimatedTcwByPnP = " << mEstimatedTcw.matrix() << endl;
   
-  // g2o
+  // g2o (StereoMatching, PnP, ICP or Bow matching methods were used to give a reliable initial value for BA)
   g2o::SparseOptimizer optimizer;
   typedef g2o::BlockSolver<g2o::BlockSolverTraits<6,2>> Block;
-  Block::LinearSolverType* linearSolver;
-  linearSolver = new g2o::LinearSolverDense<Block::PoseMatrixType>();
+  Block::LinearSolverType* linearSolver = new g2o::LinearSolverDense<Block::PoseMatrixType>();
   Block* blockSolver = new Block(linearSolver);
   g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(blockSolver);
   optimizer.setAlgorithm(solver);
-  optimizer.setVerbose(true);
   
   // vertex (pose of Tcw) this one-edge graph has only one vertex and mnInliners edges
   g2o::VertexSE3Expmap* pose = new g2o::VertexSE3Expmap();
@@ -228,7 +244,8 @@ void VisualOdometry::PoseEstimateByPnP()
   optimizer.addVertex(pose);
   
   // edge of projection measurement
-  for(size_t i=0; i<mnInliers; i++)
+  vector<EdgeProjectXYZ2UVPoseOnly*> edges;
+  for(size_t i=0; i<mnPnPInliers; i++)
   {
     int inlierId = inliers.at<int>(i,0);
     EdgeProjectXYZ2UVPoseOnly* edge = new EdgeProjectXYZ2UVPoseOnly();
@@ -238,10 +255,121 @@ void VisualOdometry::PoseEstimateByPnP()
     edge->point_ = Vector3d(vMapPoints[inlierId].x, vMapPoints[inlierId].y, vMapPoints[inlierId].z);
     edge->setMeasurement(Vector2d(vKeyPoints[inlierId].x, vKeyPoints[inlierId].y));
     edge->setInformation(Eigen::Matrix2d::Identity());
+    edge->setRobustKernel(new g2o::RobustKernelHuber());
     optimizer.addEdge(edge);
-    vMapPoints[inlierId]->mnMatched++;
+    mvpMatchedMP[inlierId]->mnMatched++;
+    edges.push_back(edge);
+  }
+  
+  // begin optimize
+  cout << "begin optimize" << endl;
+  boost::timer timer;
+  optimizer.setVerbose(true);
+  optimizer.initializeOptimization();
+  optimizer.optimize(10);
+  cout << "end optimize " << "--- elapsed time = " << timer.elapsed() << endl;
+  mEstimatedTcw = SE3(pose->estimate().rotation(), pose->estimate().translation());
+  cout << "EstimatedTcwByBA = " << mEstimatedTcw.matrix() << endl;
+  
+  // check inliers by chi2
+  for(EdgeProjectXYZ2UVPoseOnly* e:edges)
+  {
+    e->computeError();
+    if(e->chi2()>1)
+    {
+      cout << "error = " << e->chi2() << endl;
+    }
+    else
+    {
+      mnBAInliers++;
+    }
+    cout << "BA inliers = " << mnBAInliers << endl;
   }
 }
+
+bool VisualOdometry::CheckPose()
+{
+  if(mnPnPInliers < mnMinPnPInlier || mnBAInliers < mnMinBAInlier)
+  {
+    cout << "Skip this Frame and set to lost because inliers is too small." << endl
+	 << "PnP inliers = " << mnPnPInliers << endl
+	 << "BA inliers = " << mnBAInliers << endl;
+    return false;
+  }
+  SE3 mTcr = mEstimatedTcw*mReferenceFrame->mTcw.inverse();
+  Sophus::Vector6d se3 = mTcr.log();
+  if(se3.norm() > mMaxMotion)
+  {
+    cout << "Skip this Frame and set to lost because motion is too large."  << endl;
+    return false;
+  }
+}
+
+void VisualOdometry::UpdateMapPoints()
+{
+  for(unordered_map::const_iterator iterMP = mMap->mmMapPoints.begin();iterMP != mMap->mmMapPoints.end(); iterMP++)
+  {
+    if(!mCurrentFrame->IsInFrame(iterMP->second->mWorldPos))
+    {
+      mMap->mmMapPoints.erase(iterMP);
+      continue;
+    }
+    float matchRatio = float(iterMP->second->mnMatched)/iterMP->second->mnVisible;
+    // MapPoint can not be matched by enough PnP 
+    if( matchRatio < mMapPointTh)
+    {
+      mMap->mmMapPoints.erase(iterMP);
+      continue;
+    }
+    // viewing angle too large > 60 degree
+    if(GetNormal(mCurrentFrame, iterMP->second) < 0.5)
+    {
+      mMap->mmMapPoints.erase(iterMP);
+      continue;
+    }
+    AddMapPoints();
+    if(mMap->mmMapPoints.size()>1000)
+    {
+      mMapPointTh+=0.05;
+    }
+  }
+}
+
+void VisualOdometry::AddMapPoints()
+{
+//   vector<bool> matched(mvKeyPointsCur.size(), false);
+//   for(int index:mvMatchedKPIndex)
+//   {
+//     
+//   }
+  for(size_t i=0; i<mvpMatchedMP.size(); i++)
+  {
+    cv::KeyPoint kp = mvKeyPointsCur[mvMatchedKPIndex[i]];
+    double d = mCurrentFrame->FindDepth(kp);
+    if(d<0)
+      continue;
+    Vector3d worldPos = mCurrentFrame->mpCamera->pixel2world( Vector2d(), 
+							 mCurrentFrame->mTcw, 
+							 d
+						       );
+    Vector3d normalVector = worldPos - mCurrentFrame->GetCameraCenter();
+    normalVector.normalize();
+    MapPoint::Ptr mapPoint = MapPoint::CreateMapPoint(worldPos, 
+						      normalVector, 
+						      mDescriptorCur.row(mvMatchedKPIndex[i]).clone(), 
+						      mCurrentFrame.get());
+    mMap->InsertMapPoint(mapPoint);
+  }
+}
+
+
+double VisualOdometry::GetNormal(Frame::Ptr frame, MapPoint::Ptr mapPoint)
+{
+  Vector3d n = mapPoint->mWorldPos - frame->GetCameraCenter();
+  n.normalize();
+  return n.transpose()*mapPoint->mNormalVector;
+}
+
 
 
 

@@ -1,11 +1,11 @@
 add_library( myslam SHARED
-    frame.cpp
-    mappoint.cpp
-    map.cpp
-    camera.cpp
-    config.cpp
+    Frame.cpp
+    MapPoint.cpp
+    Map.cpp
+    Camera.cpp
+    Config.cpp
     g2o_types.cpp
-    visual_odometry.cpp
+    VisualOdometry.cpp
 )
 
 target_link_libraries( myslam

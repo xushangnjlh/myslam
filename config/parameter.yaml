@@ -7,7 +7,9 @@ scaleFactor: 1.2
 nLevels: 8
 matchRatio: 2 ## should larger than 1 min_distance*matchRatio
 nMaxLost: 30
-nMinInlier: 10
+nMinPnPInlier: 20
+nMinBAInlier: 10
+MaxMotion: 5.0
 KeyFrameMinR: 0.01
 KeyFrameMint: 0.01
 MapPointTh: 0.2

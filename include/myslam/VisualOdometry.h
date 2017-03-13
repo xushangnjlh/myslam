@@ -55,7 +55,8 @@ public:
   vector<MapPoint::Ptr> mvpMatchedMP;
   
   SE3 mEstimatedTcw;
-  int mnInliers;
+  int mnPnPInliers;
+  int mnBAInliers;
   int mnLost;
   
   // parameters for feature extraction
@@ -64,8 +65,10 @@ public:
   int mnLevel;
   float mMatchRatio; // criteria for good match
   int mnMaxLost; // max frames for tracking lost
-  int mnMinInlier; // min inliers for matching
+  int mnMinPnPInlier; // min inliers for matching
+  int mnMinBAInlier;
   
+  double mMaxMotion;
   double mKeyFrameMinR;
   double mKeyFrameMint;
   double mMapPointTh; // ratio to remove MapPoint
@@ -88,7 +91,7 @@ protected:
   bool CheckPose();
   bool CheckKeyFrame();
   
-  void PoseOptimization();
+  void UpdateMapPoints();
   
 };
 }

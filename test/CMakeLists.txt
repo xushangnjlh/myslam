@@ -1,2 +1,2 @@
-add_executable( run_vo run_vo.cpp )
-target_link_libraries( run_vo myslam )
+add_executable( VOTest VOTest.cpp )
+target_link_libraries( VOTest myslam )

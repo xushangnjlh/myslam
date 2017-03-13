@@ -28,6 +28,7 @@ Map()
   
 void myslam::Map::InsertMapPoint(myslam::MapPoint::Ptr mapPoint)
 {
+  // if MapPoint is not in Map, insert, else, just replace. Here can use some critirea to fuse the MapPoint.
   if(mmMapPoints.find(mapPoint->mnId) == mmMapPoints.end())
   {
     mmMapPoints.insert(make_pair(mapPoint->mnId, mapPoint));

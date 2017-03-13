@@ -7,8 +7,8 @@ Current Build Directory Index=0
 ProjectRootRelative=./
 
 [CMake][CMake Build Directory 0]
-Build Directory Path=file:///home/bjtshang/cpp_ws/myslam/build
-Build Type=
+Build Directory Path=file:///home/shang/cpp_ws/myslam/build
+Build Type=Debug
 CMake Binary=file:///usr/bin/cmake
 Environment Profile=
 Extra Arguments=
