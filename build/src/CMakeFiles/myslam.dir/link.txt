@@ -1,0 +1,1 @@
+g++  -fPIC -std=c++11 -O3 -DNDEBUG   -shared -Wl,-soname,libmyslam.so -o ../../lib/libmyslam.so CMakeFiles/myslam.dir/Frame.cpp.o CMakeFiles/myslam.dir/MapPoint.cpp.o CMakeFiles/myslam.dir/Map.cpp.o CMakeFiles/myslam.dir/Camera.cpp.o CMakeFiles/myslam.dir/Config.cpp.o CMakeFiles/myslam.dir/g2o_types.cpp.o CMakeFiles/myslam.dir/VisualOdometry.cpp.o 
