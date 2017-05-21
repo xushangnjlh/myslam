@@ -20,7 +20,7 @@
 #include "myslam/MapPoint.h"
 namespace myslam {
 MapPoint::MapPoint()
-:mnId(-1), mbBad(false), mWorldPos(Vector3d(0,0,0)), mNormalVector(Vector3d(0,0,)), mnVisible(0), mnMatched(0)
+:mnId(-1), mbBad(false), mWorldPos(Vector3d(0,0,0)), mNormalVector(Vector3d(0,0,0)), mnVisible(0), mnMatched(0)
 {
   
 }
@@ -38,12 +38,12 @@ MapPoint::~MapPoint()
 
 unsigned long idx=0;
 
-MapPoint::mpPtr MapPoint::CreateMapPoint()
+MapPoint::Ptr MapPoint::CreateMapPoint()
 {
   return MapPoint::Ptr(new MapPoint(idx++, Vector3d(0,0,0), Vector3d(0,0,0)));
 }
 
-MapPoint::mpPtr MapPoint::CreateMapPoint(const Vector3d& worldPos, const Vector3d& normalVector, const Mat& descriptor, Frame* frame)
+MapPoint::Ptr MapPoint::CreateMapPoint(const Vector3d& worldPos, const Vector3d& normalVector, const Mat& descriptor, Frame* frame)
 {
   return MapPoint::Ptr(new MapPoint(idx++, worldPos, normalVector, descriptor, frame));
 }

@@ -1,1 +1,0 @@
-g++   -std=c++11 -O3 -DNDEBUG    CMakeFiles/VOTest.dir/VOTest.cpp.o  -o ../../bin/VOTest -rdynamic ../../lib/libmyslam.so -Wl,-rpath,/home/shang/cpp_ws/myslam/lib 

@@ -1,0 +1,7 @@
+.idea
+.kdev4
+build
+lib
+myslam.kdev4
+CMakeLists.txt.user
+.gitignore~

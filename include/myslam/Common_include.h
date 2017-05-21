@@ -3,8 +3,8 @@
 
 // define the commonly included file to avoid a long include list
 // for Eigen
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 using Eigen::Vector2d;
 using Eigen::Vector3d;
 

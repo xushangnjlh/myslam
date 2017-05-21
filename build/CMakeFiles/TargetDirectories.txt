@@ -1,2 +1,0 @@
-/home/shang/cpp_ws/myslam/build/test/CMakeFiles/VOTest.dir
-/home/shang/cpp_ws/myslam/build/src/CMakeFiles/myslam.dir

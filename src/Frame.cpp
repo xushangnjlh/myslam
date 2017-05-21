@@ -27,11 +27,11 @@ Frame::Frame():
 }
 
 Frame::Frame(long id, 
-	     double timeStamp=0, 
-	     SE3 Tcw=SE3(), 
-	     Camera::Ptr camera=nullptr, 
-	     Mat color=Mat(), 
-	     Mat depth=Mat()):
+	     double timeStamp, 
+	     SE3 Tcw, 
+	     Camera::Ptr camera, 
+	     Mat color, 
+	     Mat depth):
   mnId(id), mTimeStamp(timeStamp), mTcw(Tcw), mpCamera(camera), mColor(color), mDepth(depth), mbIsKeyFrame(false)
 {
   

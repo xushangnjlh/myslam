@@ -37,8 +37,12 @@ public:
   std::list<Frame*> mObservations;
   int mnVisible;
   int mnMatched;
-  
+
+// constructor and destructor  
   MapPoint();
+  MapPoint(unsigned long id, 
+	   const Vector3d& worldPos, 
+	   const Vector3d& normalVector);
   MapPoint(unsigned long id, 
 	   const Vector3d& worldPos, 
 	   const Vector3d& normalVector, 
@@ -47,7 +51,7 @@ public:
 	  );
   ~MapPoint();
   
-  // static MapPoint::Ptr CreateMapPoint();
+  static MapPoint::Ptr CreateMapPoint();
   static MapPoint::Ptr CreateMapPoint(const Vector3d& worldPos, 
 					const Vector3d& normalVector, 
 					const Mat& descriptor,
